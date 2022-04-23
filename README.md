@@ -1,2 +1,3 @@
 # rabbitmq
-RabbitMQ as backend for Queue Package
+
+[RabbitMQ](https://www.rabbitmq.com/) as backend for Queue Package
