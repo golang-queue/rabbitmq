@@ -17,7 +17,7 @@ var _ core.Worker = (*Worker)(nil)
 
 // Worker for NSQ
 type Worker struct {
-	client    *amqp.Connection
+	conn      *amqp.Connection
 	channel   *amqp.Channel
 	stop      chan struct{}
 	stopFlag  int32
@@ -36,12 +36,12 @@ func NewWorker(opts ...Option) *Worker {
 		tasks: make(chan amqp.Delivery),
 	}
 
-	w.client, err = amqp.Dial(w.opts.addr)
+	w.conn, err = amqp.Dial(w.opts.addr)
 	if err != nil {
 		panic(err)
 	}
 
-	w.channel, err = w.client.Channel()
+	w.channel, err = w.conn.Channel()
 	if err != nil {
 		panic(err)
 	}
@@ -66,13 +66,13 @@ func (w *Worker) startConsumer() (err error) {
 		}
 
 		w.tasks, err = w.channel.Consume(
-			q.Name, // queue
-			"",     // consumer
-			true,   // auto-ack
-			false,  // exclusive
-			false,  // no-local
-			false,  // no-wait
-			nil,    // args
+			q.Name,     // queue
+			w.opts.tag, // consumer
+			true,       // auto-ack
+			false,      // exclusive
+			false,      // no-local
+			false,      // no-wait
+			nil,        // args
 		)
 
 		if err != nil {
@@ -152,7 +152,7 @@ func (w *Worker) Shutdown() error {
 		if err := w.channel.Cancel("", true); err != nil {
 			w.opts.logger.Error(err)
 		}
-		if err := w.client.Close(); err != nil {
+		if err := w.conn.Close(); err != nil {
 			w.opts.logger.Error(err)
 		}
 	})

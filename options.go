@@ -15,16 +15,24 @@ type options struct {
 	logger  queue.Logger
 	addr    string
 	subj    string
+	tag     string
 }
 
-// WithAddr setup the addr of NATS
+// WithAddr setup the URI
 func WithAddr(addr string) Option {
 	return func(w *options) {
 		w.addr = "nats://" + addr
 	}
 }
 
-// WithSubj setup the subject of NATS
+// WithAddr setup the tag
+func WithTag(tag string) Option {
+	return func(w *options) {
+		w.tag = tag
+	}
+}
+
+// WithSubj setup the topic
 func WithSubj(subj string) Option {
 	return func(w *options) {
 		w.subj = subj
@@ -49,6 +57,7 @@ func newOptions(opts ...Option) options {
 	defaultOpts := options{
 		addr:   "amqp://guest:guest@localhost:5672/",
 		subj:   "queue",
+		tag:    "golang-queue",
 		logger: queue.NewLogger(),
 		runFunc: func(context.Context, core.QueuedMessage) error {
 			return nil
