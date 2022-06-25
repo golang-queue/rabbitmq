@@ -28,25 +28,6 @@ func (m mockMessage) Bytes() []byte {
 	return []byte(m.Message)
 }
 
-func TestDefaultWorkFlow(t *testing.T) {
-	m := &mockMessage{
-		Message: "foo",
-	}
-	w := NewWorker(
-		WithSubj("test"),
-	)
-	q, err := queue.NewQueue(
-		queue.WithWorker(w),
-		queue.WithWorkerCount(1),
-	)
-	assert.NoError(t, err)
-	assert.NoError(t, q.Queue(m))
-	assert.NoError(t, q.Queue(m))
-	q.Start()
-	time.Sleep(200 * time.Millisecond)
-	q.Release()
-}
-
 func TestShutdownWorkFlow(t *testing.T) {
 	w := NewWorker(
 		WithSubj("test"),
