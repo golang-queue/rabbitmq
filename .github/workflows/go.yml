@@ -32,13 +32,6 @@ jobs:
       GO111MODULE: on
       GOPROXY: https://proxy.golang.org
 
-    # Service containers to run with `container-job`
-    services:
-      nats:
-        image: nats
-        ports:
-          - 4222:4222
-
     steps:
       - name: Set up Go ${{ matrix.go }}
         uses: actions/setup-go@v3
@@ -58,6 +51,15 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
+      - uses: mer-team/rabbitmq-mng-action@v1.2
+        with:
+          RABBITMQ_USER: 'guest'
+          RABBITMQ_PASS: 'guest'
+          RABBITMQ_PORT: 5672
+          RABBITMQ_MNG_PORT: 15672
+          RABBITMQ_TAG: '3-management-alpine'
+
       - name: Run Tests
         run: |
           go test -v -covermode=atomic -coverprofile=coverage.out
