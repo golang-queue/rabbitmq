@@ -20,7 +20,6 @@ type Worker struct {
 	client    *amqp.Connection
 	channel   *amqp.Channel
 	stop      chan struct{}
-	exit      chan struct{}
 	stopFlag  int32
 	stopOnce  sync.Once
 	startOnce sync.Once
@@ -34,7 +33,6 @@ func NewWorker(opts ...Option) *Worker {
 	w := &Worker{
 		opts:  newOptions(opts...),
 		stop:  make(chan struct{}),
-		exit:  make(chan struct{}),
 		tasks: make(chan amqp.Delivery),
 	}
 
@@ -151,10 +149,6 @@ func (w *Worker) Shutdown() error {
 
 	w.stopOnce.Do(func() {
 		close(w.stop)
-		select {
-		case <-w.exit:
-		case <-time.After(50 * time.Millisecond):
-		}
 		if err := w.channel.Cancel("", true); err != nil {
 			w.opts.logger.Error(err)
 		}
