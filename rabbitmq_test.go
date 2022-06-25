@@ -43,6 +43,7 @@ func TestDefaultWorkFlow(t *testing.T) {
 	assert.NoError(t, q.Queue(m))
 	assert.NoError(t, q.Queue(m))
 	q.Start()
+	time.Sleep(200 * time.Millisecond)
 	q.Release()
 }
 
@@ -227,4 +228,110 @@ func TestGoroutineLeak(t *testing.T) {
 	q.Shutdown()
 	q.Wait()
 	fmt.Println("number of goroutines:", runtime.NumGoroutine())
+}
+
+func TestGoroutinePanic(t *testing.T) {
+	m := mockMessage{
+		Message: "foo",
+	}
+	w := NewWorker(
+		WithSubj("GoroutinePanic"),
+		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+			panic("missing something")
+		}),
+	)
+	q, err := queue.NewQueue(
+		queue.WithWorker(w),
+		queue.WithWorkerCount(2),
+	)
+	assert.NoError(t, err)
+	q.Start()
+	time.Sleep(50 * time.Millisecond)
+	assert.NoError(t, q.Queue(m))
+	assert.NoError(t, q.Queue(m))
+	time.Sleep(2 * time.Second)
+	q.Shutdown()
+	assert.Error(t, q.Queue(m))
+	q.Wait()
+}
+
+func TestHandleTimeout(t *testing.T) {
+	job := &queue.Job{
+		Timeout: 100 * time.Millisecond,
+		Payload: []byte("foo"),
+	}
+	w := NewWorker(
+		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+			time.Sleep(200 * time.Millisecond)
+			return nil
+		}),
+	)
+
+	err := w.handle(job)
+	assert.Error(t, err)
+	assert.Equal(t, context.DeadlineExceeded, err)
+	assert.NoError(t, w.Shutdown())
+
+	job = &queue.Job{
+		Timeout: 150 * time.Millisecond,
+		Payload: []byte("foo"),
+	}
+
+	w = NewWorker(
+		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+			time.Sleep(200 * time.Millisecond)
+			return nil
+		}),
+	)
+
+	done := make(chan error)
+	go func() {
+		done <- w.handle(job)
+	}()
+
+	assert.NoError(t, w.Shutdown())
+
+	err = <-done
+	assert.Error(t, err)
+	assert.Equal(t, context.DeadlineExceeded, err)
+}
+
+func TestJobComplete(t *testing.T) {
+	job := &queue.Job{
+		Timeout: 100 * time.Millisecond,
+		Payload: []byte("foo"),
+	}
+	w := NewWorker(
+		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+			return errors.New("job completed")
+		}),
+	)
+
+	err := w.handle(job)
+	assert.Error(t, err)
+	assert.Equal(t, errors.New("job completed"), err)
+	assert.NoError(t, w.Shutdown())
+
+	job = &queue.Job{
+		Timeout: 250 * time.Millisecond,
+		Payload: []byte("foo"),
+	}
+
+	w = NewWorker(
+		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+			time.Sleep(200 * time.Millisecond)
+			return errors.New("job completed")
+		}),
+	)
+
+	done := make(chan error)
+	go func() {
+		done <- w.handle(job)
+	}()
+
+	assert.NoError(t, w.Shutdown())
+
+	err = <-done
+	assert.Error(t, err)
+	assert.Equal(t, errors.New("job completed"), err)
 }
