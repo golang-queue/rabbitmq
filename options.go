@@ -22,6 +22,7 @@ type options struct {
 	exchangeName string
 	//  Exchange Types: Direct, Fanout, Topic and Headers
 	exchangeType string
+	autoAck      bool
 }
 
 // WithAddr setup the URI
@@ -60,6 +61,13 @@ func WithTag(tag string) Option {
 	}
 }
 
+// WithAutoAck enable message auto-ack
+func WithAutoAck(val bool) Option {
+	return func(w *options) {
+		w.autoAck = val
+	}
+}
+
 // WithSubj setup the topic
 func WithSubj(subj string) Option {
 	return func(w *options) {
@@ -89,6 +97,7 @@ func newOptions(opts ...Option) options {
 		exchangeName: "test-exchange",
 		exchangeType: "direct",
 		logger:       queue.NewLogger(),
+		autoAck:      false,
 		runFunc: func(context.Context, core.QueuedMessage) error {
 			return nil
 		},

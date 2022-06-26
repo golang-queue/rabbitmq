@@ -77,13 +77,13 @@ func (w *Worker) startConsumer() (err error) {
 		}
 
 		w.tasks, err = w.channel.Consume(
-			q.Name,     // queue
-			w.opts.tag, // consumer
-			false,      // auto-ack
-			false,      // exclusive
-			false,      // no-local
-			false,      // no-wait
-			nil,        // args
+			q.Name,         // queue
+			w.opts.tag,     // consumer
+			w.opts.autoAck, // auto-ack
+			false,          // exclusive
+			false,          // no-local
+			false,          // no-wait
+			nil,            // args
 		)
 
 		if err != nil {
@@ -153,21 +153,22 @@ func (w *Worker) Run(task core.QueuedMessage) error {
 }
 
 // Shutdown worker
-func (w *Worker) Shutdown() error {
+func (w *Worker) Shutdown() (err error) {
 	if !atomic.CompareAndSwapInt32(&w.stopFlag, 0, 1) {
 		return queue.ErrQueueShutdown
 	}
 
 	w.stopOnce.Do(func() {
 		close(w.stop)
-		if err := w.channel.Cancel(w.opts.tag, true); err != nil {
-			w.opts.logger.Error(err)
+		if err = w.channel.Cancel(w.opts.tag, true); err != nil {
+			w.opts.logger.Error("consumer cancel failed:", err)
 		}
-		if err := w.conn.Close(); err != nil {
-			w.opts.logger.Error(err)
+		if err = w.conn.Close(); err != nil {
+			w.opts.logger.Error("AMQP connection close error:", err)
 		}
 	})
-	return nil
+
+	return err
 }
 
 // Queue send notification to queue
@@ -214,6 +215,9 @@ loop:
 			}
 			var data queue.Job
 			_ = json.Unmarshal(task.Body, &data)
+			if !w.opts.autoAck {
+				task.Ack(w.opts.autoAck)
+			}
 			return &data, nil
 		case <-time.After(1 * time.Second):
 			if clock == 5 {
