@@ -46,6 +46,18 @@ func NewWorker(opts ...Option) *Worker {
 		panic(err)
 	}
 
+	if err := w.channel.ExchangeDeclare(
+		w.opts.exchangeName, // name
+		w.opts.exchangeType, // type
+		true,                // durable
+		false,               // auto-deleted
+		false,               // internal
+		false,               // noWait
+		nil,                 // arguments
+	); err != nil {
+		panic(err)
+	}
+
 	return w
 }
 
@@ -54,7 +66,7 @@ func (w *Worker) startConsumer() (err error) {
 		var err error
 		q, err := w.channel.QueueDeclare(
 			w.opts.subj, // name
-			false,       // durable
+			true,        // durable
 			false,       // delete when unused
 			false,       // exclusive
 			false,       // no-wait
@@ -167,7 +179,7 @@ func (w *Worker) Queue(job core.QueuedMessage) error {
 
 	q, err := w.channel.QueueDeclare(
 		w.opts.subj, // name
-		false,       // durable
+		true,        // durable
 		false,       // delete when unused
 		false,       // exclusive
 		false,       // no-wait
