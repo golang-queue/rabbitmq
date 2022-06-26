@@ -63,7 +63,6 @@ func NewWorker(opts ...Option) *Worker {
 
 func (w *Worker) startConsumer() (err error) {
 	w.startOnce.Do(func() {
-		var err error
 		q, err := w.channel.QueueDeclare(
 			w.opts.subj, // name
 			true,        // durable
@@ -80,7 +79,7 @@ func (w *Worker) startConsumer() (err error) {
 		w.tasks, err = w.channel.Consume(
 			q.Name,     // queue
 			w.opts.tag, // consumer
-			true,       // auto-ack
+			false,      // auto-ack
 			false,      // exclusive
 			false,      // no-local
 			false,      // no-wait
@@ -161,7 +160,7 @@ func (w *Worker) Shutdown() error {
 
 	w.stopOnce.Do(func() {
 		close(w.stop)
-		if err := w.channel.Cancel("", true); err != nil {
+		if err := w.channel.Cancel(w.opts.tag, true); err != nil {
 			w.opts.logger.Error(err)
 		}
 		if err := w.conn.Close(); err != nil {
@@ -189,7 +188,7 @@ func (w *Worker) Queue(job core.QueuedMessage) error {
 		return err
 	}
 
-	return w.channel.Publish(
+	err = w.channel.Publish(
 		"",     // exchange
 		q.Name, // routing key
 		false,  // mandatory
@@ -198,6 +197,8 @@ func (w *Worker) Queue(job core.QueuedMessage) error {
 			ContentType: "text/plain",
 			Body:        job.Bytes(),
 		})
+
+	return err
 }
 
 // Request a new task
