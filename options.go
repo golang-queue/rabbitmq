@@ -23,6 +23,8 @@ type options struct {
 	//  Exchange Types: Direct, Fanout, Topic and Headers
 	exchangeType string
 	autoAck      bool
+	// AMQP routing key
+	routingKey string
 }
 
 // WithAddr setup the URI
@@ -54,10 +56,17 @@ func WithExchangeType(val string) Option {
 	}
 }
 
-// WithAddr setup the tag
-func WithTag(tag string) Option {
+// WithRoutingKey setup  AMQP routing key
+func WithRoutingKey(val string) Option {
 	return func(w *options) {
-		w.tag = tag
+		w.routingKey = val
+	}
+}
+
+// WithAddr setup the tag
+func WithTag(val string) Option {
+	return func(w *options) {
+		w.tag = val
 	}
 }
 
@@ -69,9 +78,9 @@ func WithAutoAck(val bool) Option {
 }
 
 // WithSubj setup the topic
-func WithSubj(subj string) Option {
+func WithSubj(val string) Option {
 	return func(w *options) {
-		w.subj = subj
+		w.subj = val
 	}
 }
 
@@ -96,6 +105,7 @@ func newOptions(opts ...Option) options {
 		tag:          "golang-queue",
 		exchangeName: "test-exchange",
 		exchangeType: "direct",
+		routingKey:   "test-key",
 		logger:       queue.NewLogger(),
 		autoAck:      false,
 		runFunc: func(context.Context, core.QueuedMessage) error {

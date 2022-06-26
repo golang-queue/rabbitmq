@@ -177,26 +177,18 @@ func (w *Worker) Queue(job core.QueuedMessage) error {
 		return queue.ErrQueueShutdown
 	}
 
-	q, err := w.channel.QueueDeclare(
-		w.opts.subj, // name
-		true,        // durable
-		false,       // delete when unused
-		false,       // exclusive
-		false,       // no-wait
-		nil,         // arguments
-	)
-	if err != nil {
-		return err
-	}
-
-	err = w.channel.Publish(
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
+	err := w.channel.Publish(
+		w.opts.exchangeName, // exchange
+		w.opts.routingKey,   // routing key
+		false,               // mandatory
+		false,               // immediate
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        job.Bytes(),
+			Headers:         amqp.Table{},
+			ContentType:     "text/plain",
+			ContentEncoding: "",
+			Body:            job.Bytes(),
+			DeliveryMode:    amqp.Transient, // 1=non-persistent, 2=persistent
+			Priority:        0,              // 0-9
 		})
 
 	return err
