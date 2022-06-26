@@ -76,6 +76,11 @@ func (w *Worker) startConsumer() (err error) {
 			return
 		}
 
+		if err := w.channel.QueueBind(q.Name, w.opts.routingKey, w.opts.exchangeName, false, nil); err != nil {
+			w.opts.logger.Error("cannot consume without a binding to exchange:", err)
+			return
+		}
+
 		w.tasks, err = w.channel.Consume(
 			q.Name,         // queue
 			w.opts.tag,     // consumer
@@ -87,7 +92,7 @@ func (w *Worker) startConsumer() (err error) {
 		)
 
 		if err != nil {
-			w.opts.logger.Error(err)
+			w.opts.logger.Error("cannot consume from:", q.Name, err)
 		}
 	})
 
