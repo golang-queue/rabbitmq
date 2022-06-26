@@ -208,7 +208,7 @@ loop:
 			var data queue.Job
 			_ = json.Unmarshal(task.Body, &data)
 			if !w.opts.autoAck {
-				task.Ack(w.opts.autoAck)
+				_ = task.Ack(w.opts.autoAck)
 			}
 			return &data, nil
 		case <-time.After(1 * time.Second):
