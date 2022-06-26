@@ -316,34 +316,3 @@ func TestJobComplete(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, errors.New("job completed"), err)
 }
-
-func Example_direct_queue() {
-	m := mockMessage{
-		Message: "foo",
-	}
-	w := NewWorker(
-		WithSubj("direct_queue"),
-		WithRoutingKey("direct_queue"),
-		WithTag("direct_queue"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
-			fmt.Println("get data:", string(m.Bytes()))
-			return nil
-		}),
-	)
-	q, err := queue.NewQueue(
-		queue.WithWorker(w),
-		queue.WithWorkerCount(1),
-	)
-	if err != nil {
-		w.opts.logger.Error(err)
-	}
-
-	q.Start()
-	time.Sleep(200 * time.Millisecond)
-	q.Queue(m)
-	time.Sleep(200 * time.Millisecond)
-	q.Release()
-
-	// Output:
-	// get data: foo
-}
