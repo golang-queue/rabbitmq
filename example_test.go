@@ -30,7 +30,7 @@ func Example_direct_exchange() {
 		queue.WithWorker(w1),
 	)
 	if err != nil {
-		w1.opts.logger.Error(err)
+		w1.opts.logger.Fatal(err)
 	}
 	q1.Start()
 
@@ -50,7 +50,7 @@ func Example_direct_exchange() {
 		queue.WithWorker(w2),
 	)
 	if err != nil {
-		w2.opts.logger.Error(err)
+		w2.opts.logger.Fatal(err)
 	}
 	q2.Start()
 
@@ -64,14 +64,22 @@ func Example_direct_exchange() {
 		queue.WithWorker(w),
 	)
 	if err != nil {
-		w.opts.logger.Error(err)
+		w.opts.logger.Fatal(err)
 	}
 
 	time.Sleep(200 * time.Millisecond)
-	q.Queue(m)
-	q.Queue(m)
-	q.Queue(m)
-	q.Queue(m)
+	if err := q.Queue(m); err != nil {
+		w.opts.logger.Fatal(err)
+	}
+	if err := q.Queue(m); err != nil {
+		w.opts.logger.Fatal(err)
+	}
+	if err := q.Queue(m); err != nil {
+		w.opts.logger.Fatal(err)
+	}
+	if err := q.Queue(m); err != nil {
+		w.opts.logger.Fatal(err)
+	}
 	time.Sleep(200 * time.Millisecond)
 	q.Release()
 	q1.Release()
@@ -103,7 +111,7 @@ func Example_fanout_exchange() {
 		queue.WithWorker(w1),
 	)
 	if err != nil {
-		w1.opts.logger.Error(err)
+		w1.opts.logger.Fatal(err)
 	}
 	q1.Start()
 
@@ -121,7 +129,7 @@ func Example_fanout_exchange() {
 		queue.WithWorker(w2),
 	)
 	if err != nil {
-		w2.opts.logger.Error(err)
+		w2.opts.logger.Fatal(err)
 	}
 	q2.Start()
 
@@ -134,11 +142,13 @@ func Example_fanout_exchange() {
 		queue.WithWorker(w),
 	)
 	if err != nil {
-		w.opts.logger.Error(err)
+		w.opts.logger.Fatal(err)
 	}
 
 	time.Sleep(200 * time.Millisecond)
-	q.Queue(m)
+	if err := q.Queue(m); err != nil {
+		w.opts.logger.Fatal(err)
+	}
 	time.Sleep(200 * time.Millisecond)
 	q.Release()
 	q1.Release()
