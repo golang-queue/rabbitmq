@@ -27,8 +27,9 @@ func main() {
 
 	// define the worker
 	w := rabbitmq.NewWorker(
-		rabbitmq.WithSubj("sample_2"),
-		rabbitmq.WithExchangeType("fanout"),
+		rabbitmq.WithSubj("direct_queue"),
+		rabbitmq.WithExchangeType(rabbitmq.ExchangeDirect),
+		rabbitmq.WithExchangeName("direct_queue"),
 	)
 
 	// define the queue
