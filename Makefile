@@ -1,3 +1,5 @@
+test:
+	go test -v -cover -covermode=atomic -coverprofile=coverage.out
 
 .PHONY: reset
 reset:
