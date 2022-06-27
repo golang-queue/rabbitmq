@@ -7,6 +7,23 @@ import (
 	"github.com/golang-queue/queue/core"
 )
 
+// defined in rabbitmq client package.
+const (
+	ExchangeDirect  = "direct"
+	ExchangeFanout  = "fanout"
+	ExchangeTopic   = "topic"
+	ExchangeHeaders = "headers"
+)
+
+func isVaildExchange(name string) bool {
+	switch name {
+	case ExchangeDirect, ExchangeFanout, ExchangeTopic, ExchangeHeaders:
+		return true
+	default:
+		return false
+	}
+}
+
 // Option for queue system
 type Option func(*options)
 
@@ -104,7 +121,7 @@ func newOptions(opts ...Option) options {
 		subj:         "golang-queue",
 		tag:          "golang-queue",
 		exchangeName: "test-exchange",
-		exchangeType: "direct",
+		exchangeType: ExchangeDirect,
 		routingKey:   "test-key",
 		logger:       queue.NewLogger(),
 		autoAck:      false,
@@ -117,6 +134,10 @@ func newOptions(opts ...Option) options {
 	for _, opt := range opts {
 		// Call the option giving the instantiated
 		opt(&defaultOpts)
+	}
+
+	if !isVaildExchange(defaultOpts.exchangeType) {
+		defaultOpts.logger.Fatal("invaild exchange type: ", defaultOpts.exchangeType)
 	}
 
 	return defaultOpts
