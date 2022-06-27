@@ -38,12 +38,12 @@ func NewWorker(opts ...Option) *Worker {
 
 	w.conn, err = amqp.Dial(w.opts.addr)
 	if err != nil {
-		panic(err)
+		w.opts.logger.Fatal("can't connect rabbitmq:", err)
 	}
 
 	w.channel, err = w.conn.Channel()
 	if err != nil {
-		panic(err)
+		w.opts.logger.Fatal("can't setup channel:", err)
 	}
 
 	if err := w.channel.ExchangeDeclare(
@@ -55,7 +55,7 @@ func NewWorker(opts ...Option) *Worker {
 		false,               // noWait
 		nil,                 // arguments
 	); err != nil {
-		panic(err)
+		w.opts.logger.Fatal("can't declares an exchange:", err)
 	}
 
 	return w
