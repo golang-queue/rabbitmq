@@ -217,6 +217,8 @@ func TestGoroutinePanic(t *testing.T) {
 	}
 	w := NewWorker(
 		WithSubj("GoroutinePanic"),
+		WithRoutingKey("GoroutinePanic"),
+		WithExchangeName("GoroutinePanic"),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			panic("missing something")
 		}),

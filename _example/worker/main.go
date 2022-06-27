@@ -30,7 +30,9 @@ func main() {
 
 	// define the worker
 	w := rabbitmq.NewWorker(
-		rabbitmq.WithSubj("sample_1"),
+		rabbitmq.WithSubj("sample_worker"),
+		rabbitmq.WithExchangeName("sample_worker"),
+		rabbitmq.WithRoutingKey("sample_worker"),
 		rabbitmq.WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			var v *job
 			if err := json.Unmarshal(m.Bytes(), &v); err != nil {
@@ -43,7 +45,7 @@ func main() {
 
 	// define the queue
 	q, err := queue.NewQueue(
-		queue.WithWorkerCount(10),
+		queue.WithWorkerCount(5),
 		queue.WithWorker(w),
 	)
 	if err != nil {
