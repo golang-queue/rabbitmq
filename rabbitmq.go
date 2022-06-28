@@ -64,12 +64,12 @@ func NewWorker(opts ...Option) *Worker {
 func (w *Worker) startConsumer() (err error) {
 	w.startOnce.Do(func() {
 		q, err := w.channel.QueueDeclare(
-			w.opts.subj, // name
-			true,        // durable
-			false,       // delete when unused
-			false,       // exclusive
-			false,       // no-wait
-			nil,         // arguments
+			w.opts.queue, // name
+			true,         // durable
+			false,        // delete when unused
+			false,        // exclusive
+			false,        // no-wait
+			nil,          // arguments
 		)
 		if err != nil {
 			w.opts.logger.Error(err)

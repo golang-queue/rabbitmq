@@ -15,7 +15,7 @@ func Example_direct_exchange() {
 		Message: "foo",
 	}
 	w1 := NewWorker(
-		WithSubj("direct_queue"),
+		WithQueue("direct_queue"),
 		WithExchangeName("direct_exchange"),
 		WithExchangeType("direct"),
 		WithRoutingKey("direct_exchange"),
@@ -35,7 +35,7 @@ func Example_direct_exchange() {
 	q1.Start()
 
 	w2 := NewWorker(
-		WithSubj("direct_queue"),
+		WithQueue("direct_queue"),
 		WithExchangeName("direct_exchange"),
 		WithExchangeType("direct"),
 		WithRoutingKey("direct_exchange"),
@@ -98,7 +98,7 @@ func Example_fanout_exchange() {
 		Message: "foo",
 	}
 	w1 := NewWorker(
-		WithSubj("fanout_queue_1"),
+		WithQueue("fanout_queue_1"),
 		WithExchangeName("fanout_exchange"),
 		WithExchangeType("fanout"),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
@@ -116,7 +116,7 @@ func Example_fanout_exchange() {
 	q1.Start()
 
 	w2 := NewWorker(
-		WithSubj("fanout_queue_2"),
+		WithQueue("fanout_queue_2"),
 		WithExchangeName("fanout_exchange"),
 		WithExchangeType("fanout"),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {

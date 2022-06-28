@@ -30,7 +30,7 @@ func main() {
 
 	// define the worker
 	w := rabbitmq.NewWorker(
-		rabbitmq.WithSubj("sample_worker"),
+		rabbitmq.WithQueue("sample_worker"),
 		rabbitmq.WithExchangeName("sample_worker"),
 		rabbitmq.WithRoutingKey("sample_worker"),
 		rabbitmq.WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {

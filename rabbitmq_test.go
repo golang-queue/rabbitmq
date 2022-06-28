@@ -30,7 +30,7 @@ func (m mockMessage) Bytes() []byte {
 
 func TestShutdownWorkFlow(t *testing.T) {
 	w := NewWorker(
-		WithSubj("test"),
+		WithQueue("test"),
 	)
 	q, err := queue.NewQueue(
 		queue.WithWorker(w),
@@ -50,7 +50,7 @@ func TestCustomFuncAndWait(t *testing.T) {
 		Message: "foo",
 	}
 	w := NewWorker(
-		WithSubj("test"),
+		WithQueue("test"),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			log.Println("show message: " + string(m.Bytes()))
 			time.Sleep(500 * time.Millisecond)
@@ -99,7 +99,7 @@ func TestJobReachTimeout(t *testing.T) {
 		Message: "foo",
 	}
 	w := NewWorker(
-		WithSubj("JobReachTimeout"),
+		WithQueue("JobReachTimeout"),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			for {
 				select {
@@ -135,7 +135,7 @@ func TestCancelJobAfterShutdown(t *testing.T) {
 		Message: "test",
 	}
 	w := NewWorker(
-		WithSubj("CancelJob"),
+		WithQueue("CancelJob"),
 		WithLogger(queue.NewLogger()),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			for {
@@ -172,7 +172,7 @@ func TestGoroutineLeak(t *testing.T) {
 		Message: "foo",
 	}
 	w := NewWorker(
-		WithSubj("GoroutineLeak"),
+		WithQueue("GoroutineLeak"),
 		WithLogger(queue.NewEmptyLogger()),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			for {
@@ -216,7 +216,7 @@ func TestGoroutinePanic(t *testing.T) {
 		Message: "foo",
 	}
 	w := NewWorker(
-		WithSubj("GoroutinePanic"),
+		WithQueue("GoroutinePanic"),
 		WithRoutingKey("GoroutinePanic"),
 		WithExchangeName("GoroutinePanic"),
 		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {

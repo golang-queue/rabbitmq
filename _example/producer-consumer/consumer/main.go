@@ -32,7 +32,7 @@ func main() {
 
 	// define the worker
 	w := rabbitmq.NewWorker(
-		rabbitmq.WithSubj("direct_queue"),
+		rabbitmq.WithQueue("direct_queue"),
 		rabbitmq.WithExchangeType(rabbitmq.ExchangeDirect),
 		rabbitmq.WithExchangeName("direct_queue"),
 		rabbitmq.WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {

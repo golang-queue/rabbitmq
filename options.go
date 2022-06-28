@@ -33,7 +33,7 @@ type options struct {
 	runFunc func(context.Context, core.QueuedMessage) error
 	logger  queue.Logger
 	addr    string
-	subj    string
+	queue   string
 	tag     string
 	// Durable AMQP exchange name
 	exchangeName string
@@ -94,10 +94,10 @@ func WithAutoAck(val bool) Option {
 	}
 }
 
-// WithSubj setup the topic
-func WithSubj(val string) Option {
+// WithQueue setup the queue name
+func WithQueue(val string) Option {
 	return func(w *options) {
-		w.subj = val
+		w.queue = val
 	}
 }
 
@@ -118,7 +118,7 @@ func WithLogger(l queue.Logger) Option {
 func newOptions(opts ...Option) options {
 	defaultOpts := options{
 		addr:         "amqp://guest:guest@localhost:5672/",
-		subj:         "golang-queue",
+		queue:        "golang-queue",
 		tag:          "golang-queue",
 		exchangeName: "test-exchange",
 		exchangeType: ExchangeDirect,
