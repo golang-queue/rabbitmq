@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/golang-queue/queue"
 	"github.com/golang-queue/queue/core"
-	"github.com/golang-queue/rabbitmq"
+	rabbitmq "github.com/golang-queue/rabbitmq"
 )
 
 type job struct {
@@ -24,15 +25,28 @@ func (j *job) Bytes() []byte {
 	return b
 }
 
+var (
+	uri          = flag.String("uri", "amqp://guest:guest@localhost:5672/", "AMQP URI")
+	exchange     = flag.String("exchange", "test-exchange", "Durable, non-auto-deleted AMQP exchange name")
+	exchangeType = flag.String("exchange-type", "direct", "Exchange type - direct|fanout|topic|x-custom")
+	q            = flag.String("queue", "test-queue", "Ephemeral AMQP queue name")
+	bindingKey   = flag.String("key", "test-key", "AMQP binding key")
+)
+
+func init() {
+	flag.Parse()
+}
+
 func main() {
 	taskN := 100
 	rets := make(chan string, taskN)
 
 	// define the worker
 	w := rabbitmq.NewWorker(
-		rabbitmq.WithQueue("sample_worker"),
-		rabbitmq.WithExchangeName("sample_worker"),
-		rabbitmq.WithRoutingKey("sample_worker"),
+		rabbitmq.WithAddr(*uri),
+		rabbitmq.WithQueue(*q),
+		rabbitmq.WithExchangeName(*exchange),
+		rabbitmq.WithRoutingKey(*bindingKey),
 		rabbitmq.WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			var v *job
 			if err := json.Unmarshal(m.Bytes(), &v); err != nil {
