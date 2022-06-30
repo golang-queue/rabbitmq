@@ -47,7 +47,7 @@ type options struct {
 // WithAddr setup the URI
 func WithAddr(addr string) Option {
 	return func(w *options) {
-		w.addr = "nats://" + addr
+		w.addr = addr
 	}
 }
 
