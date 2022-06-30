@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"time"
 
@@ -24,6 +25,18 @@ func (j *job) Bytes() []byte {
 	return b
 }
 
+var (
+	uri          = flag.String("uri", "amqp://guest:guest@localhost:5672/", "AMQP URI")
+	exchange     = flag.String("exchange", "test-exchange", "Durable, non-auto-deleted AMQP exchange name")
+	exchangeType = flag.String("exchange-type", "direct", "Exchange type - direct|fanout|topic|x-custom")
+	q            = flag.String("queue", "test-queue", "Ephemeral AMQP queue name")
+	bindingKey   = flag.String("key", "test-key", "AMQP binding key")
+)
+
+func init() {
+	flag.Parse()
+}
+
 func main() {
 	taskN := 10000
 	rets := make(chan string, taskN)
@@ -32,9 +45,11 @@ func main() {
 
 	// define the worker
 	w := rabbitmq.NewWorker(
-		rabbitmq.WithQueue("direct_queue"),
-		rabbitmq.WithExchangeType(rabbitmq.ExchangeDirect),
-		rabbitmq.WithExchangeName("direct_queue"),
+		rabbitmq.WithAddr(*uri),
+		rabbitmq.WithQueue(*q),
+		rabbitmq.WithExchangeName(*exchange),
+		rabbitmq.WithExchangeType(*exchangeType),
+		rabbitmq.WithRoutingKey(*bindingKey),
 		rabbitmq.WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
 			var v *job
 			if err := json.Unmarshal(m.Bytes(), &v); err != nil {
