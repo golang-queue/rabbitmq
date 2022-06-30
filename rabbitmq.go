@@ -38,12 +38,12 @@ func NewWorker(opts ...Option) *Worker {
 
 	w.conn, err = amqp.Dial(w.opts.addr)
 	if err != nil {
-		w.opts.logger.Fatal("can't connect rabbitmq:", err)
+		w.opts.logger.Fatal("can't connect rabbitmq: ", err)
 	}
 
 	w.channel, err = w.conn.Channel()
 	if err != nil {
-		w.opts.logger.Fatal("can't setup channel:", err)
+		w.opts.logger.Fatal("can't setup channel: ", err)
 	}
 
 	if err := w.channel.ExchangeDeclare(
@@ -55,7 +55,7 @@ func NewWorker(opts ...Option) *Worker {
 		false,               // noWait
 		nil,                 // arguments
 	); err != nil {
-		w.opts.logger.Fatal("can't declares an exchange:", err)
+		w.opts.logger.Fatal("can't declares an exchange: ", err)
 	}
 
 	return w
@@ -77,7 +77,7 @@ func (w *Worker) startConsumer() (err error) {
 		}
 
 		if err := w.channel.QueueBind(q.Name, w.opts.routingKey, w.opts.exchangeName, false, nil); err != nil {
-			w.opts.logger.Error("cannot consume without a binding to exchange:", err)
+			w.opts.logger.Error("cannot consume without a binding to exchange: ", err)
 			return
 		}
 
@@ -92,7 +92,7 @@ func (w *Worker) startConsumer() (err error) {
 		)
 
 		if err != nil {
-			w.opts.logger.Error("cannot consume from:", q.Name, err)
+			w.opts.logger.Error("cannot consume from: ", q.Name, err)
 		}
 	})
 
@@ -166,10 +166,10 @@ func (w *Worker) Shutdown() (err error) {
 	w.stopOnce.Do(func() {
 		close(w.stop)
 		if err = w.channel.Cancel(w.opts.tag, true); err != nil {
-			w.opts.logger.Error("consumer cancel failed:", err)
+			w.opts.logger.Error("consumer cancel failed: ", err)
 		}
 		if err = w.conn.Close(); err != nil {
-			w.opts.logger.Error("AMQP connection close error:", err)
+			w.opts.logger.Error("AMQP connection close error: ", err)
 		}
 	})
 
