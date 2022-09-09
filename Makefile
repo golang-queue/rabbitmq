@@ -1,5 +1,10 @@
+GO ?= go
+
 test:
-	go test -v -cover -covermode=atomic -coverprofile=coverage.out
+	$(GO) test -v -cover -covermode=atomic -coverprofile=coverage.out ./...
+
+upgrade:
+	$(GO) get -u ./...
 
 .PHONY: reset
 reset:

@@ -182,7 +182,8 @@ func (w *Worker) Queue(job core.QueuedMessage) error {
 		return queue.ErrQueueShutdown
 	}
 
-	err := w.channel.Publish(
+	err := w.channel.PublishWithContext(
+		context.Background(),
 		w.opts.exchangeName, // exchange
 		w.opts.routingKey,   // routing key
 		false,               // mandatory
