@@ -4,9 +4,9 @@ go 1.18
 
 require (
 	github.com/golang-queue/queue v0.1.4-0.20221230133718-0314ef173f98
-	github.com/rabbitmq/amqp091-go v1.7.0
+	github.com/rabbitmq/amqp091-go v1.8.1
 	github.com/stretchr/testify v1.8.1
-	go.uber.org/goleak v1.2.0
+	go.uber.org/goleak v1.2.1
 )
 
 require (
