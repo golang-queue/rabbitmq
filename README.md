@@ -6,8 +6,8 @@
 
 See the [Exchanges and Exchange Types][11] section of [AMQP 0-9-1 Model Explained][12].
 
-[11]:https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges
-[12]:https://www.rabbitmq.com/tutorials/amqp-concepts.html
+[11]: https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges
+[12]: https://www.rabbitmq.com/tutorials/amqp-concepts.html
 
 ### Direct Exchange
 
@@ -68,9 +68,9 @@ func main() {
     rabbitmq.WithExchangeName(*exchange),
     rabbitmq.WithExchangeType(*exchangeType),
     rabbitmq.WithRoutingKey(*bindingKey),
-    rabbitmq.WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+    rabbitmq.WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
       var v *job
-      if err := json.Unmarshal(m.Bytes(), &v); err != nil {
+      if err := json.Unmarshal(m.Payload(), &v); err != nil {
         return err
       }
       rets <- v.Message

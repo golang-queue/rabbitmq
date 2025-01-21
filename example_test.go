@@ -19,8 +19,8 @@ func Example_direct_exchange() {
 		WithExchangeName("direct_exchange"),
 		WithExchangeType("direct"),
 		WithRoutingKey("direct_exchange"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
-			fmt.Println("worker01 get data:", string(m.Bytes()))
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
+			fmt.Println("worker01 get data:", string(m.Payload()))
 			time.Sleep(100 * time.Millisecond)
 			return nil
 		}),
@@ -39,8 +39,8 @@ func Example_direct_exchange() {
 		WithExchangeName("direct_exchange"),
 		WithExchangeType("direct"),
 		WithRoutingKey("direct_exchange"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
-			fmt.Println("worker02 get data:", string(m.Bytes()))
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
+			fmt.Println("worker02 get data:", string(m.Payload()))
 			time.Sleep(100 * time.Millisecond)
 			return nil
 		}),
@@ -101,8 +101,8 @@ func Example_fanout_exchange() {
 		WithQueue("fanout_queue_1"),
 		WithExchangeName("fanout_exchange"),
 		WithExchangeType("fanout"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
-			fmt.Println("worker01 get data:", string(m.Bytes()))
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
+			fmt.Println("worker01 get data:", string(m.Payload()))
 			return nil
 		}),
 	)
@@ -119,8 +119,8 @@ func Example_fanout_exchange() {
 		WithQueue("fanout_queue_2"),
 		WithExchangeName("fanout_exchange"),
 		WithExchangeType("fanout"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
-			fmt.Println("worker02 get data:", string(m.Bytes()))
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
+			fmt.Println("worker02 get data:", string(m.Payload()))
 			return nil
 		}),
 	)

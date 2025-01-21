@@ -91,7 +91,6 @@ func (w *Worker) startConsumer() (err error) {
 			false,          // no-wait
 			nil,            // args
 		)
-
 		if err != nil {
 			w.opts.logger.Error("cannot consume from: ", q.Name, err)
 		}
@@ -101,7 +100,7 @@ func (w *Worker) startConsumer() (err error) {
 }
 
 // Run start the worker
-func (w *Worker) Run(ctx context.Context, task core.QueuedMessage) error {
+func (w *Worker) Run(ctx context.Context, task core.TaskMessage) error {
 	return w.opts.runFunc(ctx, task)
 }
 
@@ -125,7 +124,7 @@ func (w *Worker) Shutdown() (err error) {
 }
 
 // Queue send notification to queue
-func (w *Worker) Queue(job core.QueuedMessage) error {
+func (w *Worker) Queue(job core.TaskMessage) error {
 	if atomic.LoadInt32(&w.stopFlag) == 1 {
 		return queue.ErrQueueShutdown
 	}
@@ -149,7 +148,7 @@ func (w *Worker) Queue(job core.QueuedMessage) error {
 }
 
 // Request a new task
-func (w *Worker) Request() (core.QueuedMessage, error) {
+func (w *Worker) Request() (core.TaskMessage, error) {
 	_ = w.startConsumer()
 	clock := 0
 loop:

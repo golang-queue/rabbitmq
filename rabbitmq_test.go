@@ -52,8 +52,8 @@ func TestCustomFuncAndWait(t *testing.T) {
 	}
 	w := NewWorker(
 		WithQueue("test"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
-			log.Println("show message: " + string(m.Bytes()))
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
+			log.Println("show message: " + string(m.Payload()))
 			time.Sleep(500 * time.Millisecond)
 			return nil
 		}),
@@ -101,11 +101,11 @@ func TestJobReachTimeout(t *testing.T) {
 	}
 	w := NewWorker(
 		WithQueue("JobReachTimeout"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
 			for {
 				select {
 				case <-ctx.Done():
-					log.Println("get data:", string(m.Bytes()))
+					log.Println("get data:", string(m.Payload()))
 					if errors.Is(ctx.Err(), context.Canceled) {
 						log.Println("queue has been shutdown and cancel the job")
 					} else if errors.Is(ctx.Err(), context.DeadlineExceeded) {
@@ -138,11 +138,11 @@ func TestCancelJobAfterShutdown(t *testing.T) {
 	w := NewWorker(
 		WithQueue("CancelJob"),
 		WithLogger(queue.NewLogger()),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
 			for {
 				select {
 				case <-ctx.Done():
-					log.Println("get data:", string(m.Bytes()))
+					log.Println("get data:", string(m.Payload()))
 					if errors.Is(ctx.Err(), context.Canceled) {
 						log.Println("queue has been shutdown and cancel the job")
 					} else if errors.Is(ctx.Err(), context.DeadlineExceeded) {
@@ -175,11 +175,11 @@ func TestGoroutineLeak(t *testing.T) {
 	w := NewWorker(
 		WithQueue("GoroutineLeak"),
 		WithLogger(queue.NewEmptyLogger()),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
 			for {
 				select {
 				case <-ctx.Done():
-					log.Println("get data:", string(m.Bytes()))
+					log.Println("get data:", string(m.Payload()))
 					if errors.Is(ctx.Err(), context.Canceled) {
 						log.Println("queue has been shutdown and cancel the job")
 					} else if errors.Is(ctx.Err(), context.DeadlineExceeded) {
@@ -187,7 +187,7 @@ func TestGoroutineLeak(t *testing.T) {
 					}
 					return nil
 				default:
-					log.Println("get data:", string(m.Bytes()))
+					log.Println("get data:", string(m.Payload()))
 					time.Sleep(50 * time.Millisecond)
 					return nil
 				}
@@ -220,7 +220,7 @@ func TestGoroutinePanic(t *testing.T) {
 		WithQueue("GoroutinePanic"),
 		WithRoutingKey("GoroutinePanic"),
 		WithExchangeName("GoroutinePanic"),
-		WithRunFunc(func(ctx context.Context, m core.QueuedMessage) error {
+		WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
 			panic("missing something")
 		}),
 	)
