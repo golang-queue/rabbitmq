@@ -30,7 +30,7 @@ type Option func(*options)
 // AMQP 0-9-1 Model Explained
 // ref: https://www.rabbitmq.com/tutorials/amqp-concepts.html
 type options struct {
-	runFunc func(context.Context, core.QueuedMessage) error
+	runFunc func(context.Context, core.TaskMessage) error
 	logger  queue.Logger
 	addr    string
 	queue   string
@@ -102,7 +102,7 @@ func WithQueue(val string) Option {
 }
 
 // WithRunFunc setup the run func of queue
-func WithRunFunc(fn func(context.Context, core.QueuedMessage) error) Option {
+func WithRunFunc(fn func(context.Context, core.TaskMessage) error) Option {
 	return func(w *options) {
 		w.runFunc = fn
 	}
@@ -125,7 +125,7 @@ func newOptions(opts ...Option) options {
 		routingKey:   "test-key",
 		logger:       queue.NewLogger(),
 		autoAck:      false,
-		runFunc: func(context.Context, core.QueuedMessage) error {
+		runFunc: func(context.Context, core.TaskMessage) error {
 			return nil
 		},
 	}
