@@ -59,12 +59,18 @@ func setupRabbitMQContainer(ctx context.Context, t *testing.T) (testcontainers.C
 
 func TestShutdownWorkFlow(t *testing.T) {
 	ctx := context.Background()
-	rabbitMQC, endpoint := setupRabbitMQContainer(ctx, t)
+	rabbitMQC, _ := setupRabbitMQContainer(ctx, t)
 	defer testcontainers.CleanupContainer(t, rabbitMQC)
-	log.Println("RabbitMQ endpoint:", endpoint)
+
+	port, err := rabbitMQC.MappedPort(ctx, "5672")
+	assert.NoError(t, err)
+
+	host, err := rabbitMQC.Host(ctx)
+	assert.NoError(t, err)
+
 	w := NewWorker(
 		WithQueue("test"),
-		WithAddr(fmt.Sprintf("amqp://guest:guest@%s/", endpoint)),
+		WithAddr(fmt.Sprintf("amqp://guest:guest@%s:%s/", host, port.Port())),
 	)
 	q, err := queue.NewQueue(
 		queue.WithWorker(w),
