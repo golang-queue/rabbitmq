@@ -12,8 +12,11 @@ import (
 	"github.com/golang-queue/queue"
 	"github.com/golang-queue/queue/core"
 	"github.com/golang-queue/queue/job"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 )
 
@@ -29,9 +32,38 @@ func (m mockMessage) Bytes() []byte {
 	return []byte(m.Message)
 }
 
+func setupRabbitMQContainer(ctx context.Context, t *testing.T) (testcontainers.Container, string) {
+	req := testcontainers.ContainerRequest{
+		Image: "rabbitmq:3",
+		ExposedPorts: []string{
+			"5672/tcp",  // amqp
+			"15672/tcp", // management plugin
+		},
+		WaitingFor: wait.ForLog("TCP: listening on"),
+		Env: map[string]string{
+			"RABBITMQ_DEFAULT_USER": "guest",
+			"RABBITMQ_DEFAULT_PASS": "guest",
+		},
+	}
+	rabbitMQC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	require.NoError(t, err)
+
+	endpoint, err := rabbitMQC.Endpoint(ctx, "")
+	require.NoError(t, err)
+
+	return rabbitMQC, endpoint
+}
+
 func TestShutdownWorkFlow(t *testing.T) {
+	ctx := context.Background()
+	natsC, endpoint := setupRabbitMQContainer(ctx, t)
+	defer testcontainers.CleanupContainer(t, natsC)
 	w := NewWorker(
 		WithQueue("test"),
+		WithAddr(fmt.Sprintf("amqp://guest:guest@%s/", endpoint)),
 	)
 	q, err := queue.NewQueue(
 		queue.WithWorker(w),
