@@ -34,12 +34,12 @@ func (m mockMessage) Bytes() []byte {
 
 func setupRabbitMQContainer(ctx context.Context, t *testing.T) (testcontainers.Container, string) {
 	req := testcontainers.ContainerRequest{
-		Image: "rabbitmq:3",
+		Image: "rabbitmq:3-management",
 		ExposedPorts: []string{
 			"5672/tcp",  // amqp
 			"15672/tcp", // management plugin
 		},
-		WaitingFor: wait.ForLog("TCP: listening on"),
+		WaitingFor: wait.ForListeningPort("5672/tcp"),
 		Env: map[string]string{
 			"RABBITMQ_DEFAULT_USER": "guest",
 			"RABBITMQ_DEFAULT_PASS": "guest",
