@@ -61,6 +61,7 @@ func TestShutdownWorkFlow(t *testing.T) {
 	ctx := context.Background()
 	natsC, endpoint := setupRabbitMQContainer(ctx, t)
 	defer testcontainers.CleanupContainer(t, natsC)
+	log.Println(endpoint)
 	w := NewWorker(
 		WithQueue("test"),
 		WithAddr(fmt.Sprintf("amqp://guest:guest@%s/", endpoint)),
