@@ -23,12 +23,12 @@ import (
   "encoding/json"
   "flag"
   "fmt"
+  "log"
   "time"
 
-  "github.com/appleboy/graceful"
   "github.com/golang-queue/queue"
   "github.com/golang-queue/queue/core"
-  "github.com/golang-queue/rabbitmq"
+  rabbitmq "github.com/golang-queue/rabbitmq"
 )
 
 type job struct {
@@ -56,17 +56,14 @@ func init() {
 }
 
 func main() {
-  taskN := 10000
+  taskN := 100
   rets := make(chan string, taskN)
-
-  m := graceful.NewManager()
 
   // define the worker
   w := rabbitmq.NewWorker(
     rabbitmq.WithAddr(*uri),
     rabbitmq.WithQueue(*q),
     rabbitmq.WithExchangeName(*exchange),
-    rabbitmq.WithExchangeType(*exchangeType),
     rabbitmq.WithRoutingKey(*bindingKey),
     rabbitmq.WithRunFunc(func(ctx context.Context, m core.TaskMessage) error {
       var v *job
@@ -74,39 +71,40 @@ func main() {
         return err
       }
       rets <- v.Message
-      time.Sleep(500 * time.Millisecond)
       return nil
     }),
   )
+
   // define the queue
-  q := queue.NewPool(
-    2,
+  q, err := queue.NewQueue(
+    queue.WithWorkerCount(5),
     queue.WithWorker(w),
   )
+  if err != nil {
+    log.Fatal(err)
+  }
 
-  m.AddRunningJob(func(ctx context.Context) error {
-    for {
-      select {
-      case <-ctx.Done():
-        select {
-        case m := <-rets:
-          fmt.Println("message:", m)
-        default:
-        }
-        return nil
-      case m := <-rets:
-        fmt.Println("message:", m)
-        time.Sleep(50 * time.Millisecond)
+  // start the five worker
+  q.Start()
+
+  // assign tasks in queue
+  for i := 0; i < taskN; i++ {
+    go func(i int) {
+      if err := q.Queue(&job{
+        Message: fmt.Sprintf("handle the job: %d", i+1),
+      }); err != nil {
+        log.Fatal(err)
       }
-    }
-  })
+    }(i)
+  }
 
-  m.AddShutdownJob(func() error {
-    // shutdown the service and notify all the worker
-    q.Release()
-    return nil
-  })
+  // wait until all tasks done
+  for i := 0; i < taskN; i++ {
+    fmt.Println("message:", <-rets)
+    time.Sleep(50 * time.Millisecond)
+  }
 
-  <-m.Done()
+  // shutdown the service and notify all the worker
+  q.Release()
 }
 ```
