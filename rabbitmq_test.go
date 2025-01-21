@@ -36,8 +36,8 @@ func setupRabbitMQContainer(ctx context.Context, t *testing.T) (testcontainers.C
 	req := testcontainers.ContainerRequest{
 		Image: "rabbitmq:3-management",
 		ExposedPorts: []string{
-			"5672/tcp",  // amqp
-			"15672/tcp", // management plugin
+			"4369/tcp", // epmd
+			"5672/tcp", // amqp
 		},
 		WaitingFor: wait.ForListeningPort("5672/tcp"),
 		Env: map[string]string{
@@ -59,9 +59,9 @@ func setupRabbitMQContainer(ctx context.Context, t *testing.T) (testcontainers.C
 
 func TestShutdownWorkFlow(t *testing.T) {
 	ctx := context.Background()
-	natsC, endpoint := setupRabbitMQContainer(ctx, t)
-	defer testcontainers.CleanupContainer(t, natsC)
-	log.Println(endpoint)
+	rabbitMQC, endpoint := setupRabbitMQContainer(ctx, t)
+	defer testcontainers.CleanupContainer(t, rabbitMQC)
+	log.Println("RabbitMQ endpoint:", endpoint)
 	w := NewWorker(
 		WithQueue("test"),
 		WithAddr(fmt.Sprintf("amqp://guest:guest@%s/", endpoint)),
