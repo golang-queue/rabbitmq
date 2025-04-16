@@ -62,7 +62,7 @@ func NewWorker(opts ...Option) *Worker {
 	return w
 }
 
-func (w *Worker) startConsumer() (err error) {
+func (w *Worker) startConsumer() error { //nolint:unparam
 	w.startOnce.Do(func() {
 		q, err := w.channel.QueueDeclare(
 			w.opts.queue, // name
@@ -96,7 +96,7 @@ func (w *Worker) startConsumer() (err error) {
 		}
 	})
 
-	return err
+	return nil
 }
 
 // Run start the worker
