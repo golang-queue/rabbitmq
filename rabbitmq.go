@@ -62,7 +62,8 @@ func NewWorker(opts ...Option) *Worker {
 	return w
 }
 
-func (w *Worker) startConsumer() error { //nolint:unparam
+func (w *Worker) startConsumer() error {
+	var initErr error
 	w.startOnce.Do(func() {
 		q, err := w.channel.QueueDeclare(
 			w.opts.queue, // name
@@ -73,12 +74,14 @@ func (w *Worker) startConsumer() error { //nolint:unparam
 			nil,          // arguments
 		)
 		if err != nil {
-			w.opts.logger.Error(err)
+			initErr = err
+			w.opts.logger.Error("QueueDeclare failed: ", err)
 			return
 		}
 
 		if err := w.channel.QueueBind(q.Name, w.opts.routingKey, w.opts.exchangeName, false, nil); err != nil {
-			w.opts.logger.Error("cannot consume without a binding to exchange: ", err)
+			initErr = err
+			w.opts.logger.Error("QueueBind failed: ", err)
 			return
 		}
 
@@ -92,11 +95,13 @@ func (w *Worker) startConsumer() error { //nolint:unparam
 			nil,            // args
 		)
 		if err != nil {
-			w.opts.logger.Error("cannot consume from: ", q.Name, err)
+			initErr = err
+			w.opts.logger.Error("Consume failed: ", err)
+			return
 		}
 	})
 
-	return nil
+	return initErr
 }
 
 // Run start the worker
@@ -149,7 +154,9 @@ func (w *Worker) Queue(job core.TaskMessage) error {
 
 // Request a new task
 func (w *Worker) Request() (core.TaskMessage, error) {
-	_ = w.startConsumer()
+	if err := w.startConsumer(); err != nil {
+		return nil, err
+	}
 	clock := 0
 loop:
 	for {
