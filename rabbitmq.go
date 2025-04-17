@@ -16,7 +16,19 @@ import (
 
 var _ core.Worker = (*Worker)(nil)
 
-// Worker for NSQ
+/*
+Worker struct implements the core.Worker interface for RabbitMQ.
+It manages the AMQP connection, channel, and task consumption.
+Fields:
+- conn: AMQP connection to RabbitMQ server.
+- channel: AMQP channel for communication.
+- stop: Channel to signal worker shutdown.
+- stopFlag: Atomic flag to indicate if the worker is stopped.
+- stopOnce: Ensures shutdown logic runs only once.
+- startOnce: Ensures consumer initialization runs only once.
+- opts: Configuration options for the worker.
+- tasks: Channel for receiving AMQP deliveries (tasks).
+*/
 type Worker struct {
 	conn      *amqp.Connection
 	channel   *amqp.Channel
@@ -28,7 +40,17 @@ type Worker struct {
 	tasks     <-chan amqp.Delivery
 }
 
-// NewWorker for struc
+/*
+NewWorker creates and initializes a new Worker instance with the provided options.
+It establishes a connection to RabbitMQ, sets up the channel, and declares the exchange.
+If any step fails, it logs a fatal error and terminates the process.
+
+Parameters:
+- opts: Variadic list of Option functions to configure the worker.
+
+Returns:
+- Pointer to the initialized Worker.
+*/
 func NewWorker(opts ...Option) *Worker {
 	var err error
 	w := &Worker{
@@ -62,6 +84,14 @@ func NewWorker(opts ...Option) *Worker {
 	return w
 }
 
+/*
+startConsumer initializes the consumer for the worker.
+It declares the queue, binds it to the exchange, and starts consuming messages.
+This method is safe to call multiple times but will only execute once due to sync.Once.
+
+Returns:
+- error: Any error encountered during initialization, or nil on success.
+*/
 func (w *Worker) startConsumer() error {
 	var initErr error
 	w.startOnce.Do(func() {
@@ -104,12 +134,29 @@ func (w *Worker) startConsumer() error {
 	return initErr
 }
 
-// Run start the worker
+/*
+Run executes the worker's task processing function.
+It delegates the actual task handling to the configured runFunc.
+
+Parameters:
+- ctx: Context for cancellation and timeout.
+- task: The task message to process.
+
+Returns:
+- error: Any error returned by the runFunc.
+*/
 func (w *Worker) Run(ctx context.Context, task core.TaskMessage) error {
 	return w.opts.runFunc(ctx, task)
 }
 
-// Shutdown worker
+/*
+Shutdown gracefully stops the worker.
+It ensures shutdown logic runs only once, cancels the consumer, and closes the AMQP connection.
+If the worker is already stopped, it returns queue.ErrQueueShutdown.
+
+Returns:
+- error: Any error encountered during shutdown, or nil on success.
+*/
 func (w *Worker) Shutdown() (err error) {
 	if !atomic.CompareAndSwapInt32(&w.stopFlag, 0, 1) {
 		return queue.ErrQueueShutdown
@@ -128,7 +175,16 @@ func (w *Worker) Shutdown() (err error) {
 	return err
 }
 
-// Queue send notification to queue
+/*
+Queue publishes a new task message to the RabbitMQ exchange.
+If the worker is stopped, it returns queue.ErrQueueShutdown.
+
+Parameters:
+- job: The task message to be published.
+
+Returns:
+- error: Any error encountered during publishing, or nil on success.
+*/
 func (w *Worker) Queue(job core.TaskMessage) error {
 	if atomic.LoadInt32(&w.stopFlag) == 1 {
 		return queue.ErrQueueShutdown
@@ -152,7 +208,15 @@ func (w *Worker) Queue(job core.TaskMessage) error {
 	return err
 }
 
-// Request a new task
+/*
+Request retrieves a new task message from the queue.
+It starts the consumer if not already started, waits for a message, and unmarshals it into a job.Message.
+If no message is received within a timeout, it returns queue.ErrNoTaskInQueue.
+
+Returns:
+- core.TaskMessage: The received task message, or nil if none.
+- error: Any error encountered, or queue.ErrNoTaskInQueue if no task is available.
+*/
 func (w *Worker) Request() (core.TaskMessage, error) {
 	if err := w.startConsumer(); err != nil {
 		return nil, err
