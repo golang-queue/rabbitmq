@@ -1,5 +1,9 @@
 # rabbitmq
 
+[![Run Testing](https://github.com/golang-queue/rabbitmq/actions/workflows/go.yml/badge.svg)](https://github.com/golang-queue/rabbitmq/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/golang-queue/rabbitmq)](https://goreportcard.com/report/github.com/golang-queue/rabbitmq)
+[![GoDoc](https://pkg.go.dev/badge/github.com/golang-queue/rabbitmq)](https://pkg.go.dev/github.com/golang-queue/rabbitmq)
+
 [RabbitMQ](https://www.rabbitmq.com/) as backend for Queue Package. See the [Go RabbitMQ Client Library](https://github.com/rabbitmq/amqp091-go) maintained by the [RabbitMQ core team](https://github.com/rabbitmq). It was [originally developed by Sean Treadway](https://github.com/streadway/amqp).
 
 ## Exchanges and Exchange Types
