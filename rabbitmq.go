@@ -3,6 +3,8 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,6 +17,30 @@ import (
 )
 
 var _ core.Worker = (*Worker)(nil)
+
+// ReconnectConfig defines the retry policy for RabbitMQ connection.
+type ReconnectConfig struct {
+	MaxRetries   int
+	InitialDelay time.Duration
+	MaxDelay     time.Duration
+}
+
+// dialWithRetry tries to connect to RabbitMQ with retry and backoff.
+func dialWithRetry(addr string, cfg ReconnectConfig) (*amqp.Connection, error) {
+	var conn *amqp.Connection
+	var err error
+	delay := cfg.InitialDelay
+	for i := 0; i < cfg.MaxRetries; i++ {
+		conn, err = amqp.Dial(addr)
+		if err == nil {
+			return conn, nil
+		}
+		time.Sleep(delay)
+		// Exponential backoff with cap
+		delay = time.Duration(math.Min(float64(cfg.MaxDelay), float64(delay)*2))
+	}
+	return nil, errors.New("failed to connect to RabbitMQ after retries: " + err.Error())
+}
 
 /*
 Worker struct implements the core.Worker interface for RabbitMQ.
@@ -59,7 +85,13 @@ func NewWorker(opts ...Option) *Worker {
 		tasks: make(chan amqp.Delivery),
 	}
 
-	w.conn, err = amqp.Dial(w.opts.addr)
+	// Use retry config, fallback to default if not set
+	retryCfg := ReconnectConfig{
+		MaxRetries:   5,
+		InitialDelay: 500 * time.Millisecond,
+		MaxDelay:     5 * time.Second,
+	}
+	w.conn, err = dialWithRetry(w.opts.addr, retryCfg)
 	if err != nil {
 		w.opts.logger.Fatal("can't connect rabbitmq: ", err)
 	}
@@ -164,11 +196,30 @@ func (w *Worker) Shutdown() (err error) {
 
 	w.stopOnce.Do(func() {
 		close(w.stop)
-		if err = w.channel.Cancel(w.opts.tag, true); err != nil {
-			w.opts.logger.Error("consumer cancel failed: ", err)
+		// Cancel consumer first
+		if w.channel != nil {
+			if cerr := w.channel.Cancel(w.opts.tag, true); cerr != nil {
+				w.opts.logger.Error("consumer cancel failed: ", cerr)
+				if err == nil {
+					err = cerr
+				}
+			}
+			// Try to close channel
+			if cerr := w.channel.Close(); cerr != nil {
+				w.opts.logger.Error("AMQP channel close error: ", cerr)
+				if err == nil {
+					err = cerr
+				}
+			}
 		}
-		if err = w.conn.Close(); err != nil {
-			w.opts.logger.Error("AMQP connection close error: ", err)
+		// Then close connection
+		if w.conn != nil {
+			if cerr := w.conn.Close(); cerr != nil {
+				w.opts.logger.Error("AMQP connection close error: ", cerr)
+				if err == nil {
+					err = cerr
+				}
+			}
 		}
 	})
 
@@ -232,7 +283,10 @@ loop:
 			var data job.Message
 			_ = json.Unmarshal(task.Body, &data)
 			if !w.opts.autoAck {
-				_ = task.Ack(w.opts.autoAck)
+				if err := task.Ack(false); err != nil {
+					w.opts.logger.Error("Ack failed: ", err)
+					_ = task.Nack(false, true) // requeue
+				}
 			}
 			return &data, nil
 		case <-time.After(1 * time.Second):
