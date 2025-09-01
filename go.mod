@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/golang-queue/queue v0.4.0
 	github.com/rabbitmq/amqp091-go v1.10.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.35.0
 	go.uber.org/goleak v1.3.0
 )
