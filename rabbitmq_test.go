@@ -20,6 +20,8 @@ import (
 	"go.uber.org/goleak"
 )
 
+const testMessage = "foo"
+
 func TestMain(m *testing.M) {
 	goleak.VerifyTestMain(m)
 }
@@ -87,7 +89,7 @@ func TestShutdownWorkFlow(t *testing.T) {
 
 func TestCustomFuncAndWait(t *testing.T) {
 	m := &mockMessage{
-		Message: "foo",
+		Message: testMessage,
 	}
 	w := NewWorker(
 		WithQueue("test"),
@@ -116,7 +118,7 @@ func TestCustomFuncAndWait(t *testing.T) {
 
 func TestEnqueueJobAfterShutdown(t *testing.T) {
 	m := mockMessage{
-		Message: "foo",
+		Message: testMessage,
 	}
 	w := NewWorker()
 	q, err := queue.NewQueue(
@@ -136,7 +138,7 @@ func TestEnqueueJobAfterShutdown(t *testing.T) {
 
 func TestJobReachTimeout(t *testing.T) {
 	m := mockMessage{
-		Message: "foo",
+		Message: testMessage,
 	}
 	w := NewWorker(
 		WithQueue("JobReachTimeout"),
@@ -213,7 +215,7 @@ func TestCancelJobAfterShutdown(t *testing.T) {
 
 func TestGoroutineLeak(t *testing.T) {
 	m := mockMessage{
-		Message: "foo",
+		Message: testMessage,
 	}
 	w := NewWorker(
 		WithQueue("GoroutineLeak"),
@@ -257,7 +259,7 @@ func TestGoroutineLeak(t *testing.T) {
 
 func TestGoroutinePanic(t *testing.T) {
 	m := mockMessage{
-		Message: "foo",
+		Message: testMessage,
 	}
 	w := NewWorker(
 		WithQueue("GoroutinePanic"),

@@ -235,7 +235,7 @@ Returns:
 */
 func newOptions(opts ...Option) options {
 	defaultOpts := options{
-		addr:         "amqp://guest:guest@localhost:5672/",
+		addr:         "amqp://guest:guest@localhost:5672/", //nolint:gosec // Default local RabbitMQ credentials.
 		queue:        "golang-queue",
 		tag:          "golang-queue",
 		exchangeName: "test-exchange",
