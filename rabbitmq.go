@@ -59,7 +59,7 @@ type Worker struct {
 	conn      *amqp.Connection
 	channel   *amqp.Channel
 	stop      chan struct{}
-	stopFlag  int32
+	stopFlag  atomic.Int32
 	stopOnce  sync.Once
 	startOnce sync.Once
 	opts      options
@@ -141,7 +141,13 @@ func (w *Worker) startConsumer() error {
 			return
 		}
 
-		if err := w.channel.QueueBind(q.Name, w.opts.routingKey, w.opts.exchangeName, false, nil); err != nil {
+		if err := w.channel.QueueBind(
+			q.Name,
+			w.opts.routingKey,
+			w.opts.exchangeName,
+			false,
+			nil,
+		); err != nil {
 			initErr = err
 			w.opts.logger.Error("QueueBind failed: ", err)
 			return
@@ -190,7 +196,7 @@ Returns:
 - error: Any error encountered during shutdown, or nil on success.
 */
 func (w *Worker) Shutdown() (err error) {
-	if !atomic.CompareAndSwapInt32(&w.stopFlag, 0, 1) {
+	if !w.stopFlag.CompareAndSwap(0, 1) {
 		return queue.ErrQueueShutdown
 	}
 
@@ -237,7 +243,7 @@ Returns:
 - error: Any error encountered during publishing, or nil on success.
 */
 func (w *Worker) Queue(job core.TaskMessage) error {
-	if atomic.LoadInt32(&w.stopFlag) == 1 {
+	if w.stopFlag.Load() == 1 {
 		return queue.ErrQueueShutdown
 	}
 
@@ -254,7 +260,8 @@ func (w *Worker) Queue(job core.TaskMessage) error {
 			Body:            job.Bytes(),
 			DeliveryMode:    amqp.Transient, // 1=non-persistent, 2=persistent
 			Priority:        0,              // 0-9
-		})
+		},
+	)
 
 	return err
 }
@@ -293,7 +300,7 @@ loop:
 			if clock == 5 {
 				break loop
 			}
-			clock += 1
+			clock++
 		}
 	}
 
