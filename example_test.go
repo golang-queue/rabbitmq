@@ -37,7 +37,7 @@ worker02 get data: foo
 */
 func Example_direct_exchange() {
 	m := mockMessage{
-		Message: "foo",
+		Message: testMessage,
 	}
 	w1 := NewWorker(
 		WithQueue("direct_queue"),
@@ -143,7 +143,7 @@ worker02 get data: foo
 */
 func Example_fanout_exchange() {
 	m := mockMessage{
-		Message: "foo",
+		Message: testMessage,
 	}
 	w1 := NewWorker(
 		WithQueue("fanout_queue_1"),

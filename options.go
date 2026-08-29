@@ -52,6 +52,9 @@ It allows for flexible and composable configuration of RabbitMQ workers and queu
 */
 type Option func(*options)
 
+//nolint:gosec // Default local RabbitMQ credentials are not a secret.
+const defaultAddr = "amqp://guest:guest@localhost:5672/"
+
 /*
 options struct holds all configuration parameters for a RabbitMQ worker or queue.
 
@@ -235,7 +238,7 @@ Returns:
 */
 func newOptions(opts ...Option) options {
 	defaultOpts := options{
-		addr:         "amqp://guest:guest@localhost:5672/",
+		addr:         defaultAddr,
 		queue:        "golang-queue",
 		tag:          "golang-queue",
 		exchangeName: "test-exchange",
