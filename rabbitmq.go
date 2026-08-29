@@ -260,7 +260,8 @@ func (w *Worker) Queue(job core.TaskMessage) error {
 			Body:            job.Bytes(),
 			DeliveryMode:    amqp.Transient, // 1=non-persistent, 2=persistent
 			Priority:        0,              // 0-9
-		})
+		},
+	)
 
 	return err
 }
