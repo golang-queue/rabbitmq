@@ -8,9 +8,10 @@ import (
 	"log"
 	"time"
 
+	rabbitmq "github.com/golang-queue/rabbitmq"
+
 	"github.com/golang-queue/queue"
 	"github.com/golang-queue/queue/core"
-	rabbitmq "github.com/golang-queue/rabbitmq"
 )
 
 type job struct {
@@ -26,11 +27,19 @@ func (j *job) Bytes() []byte {
 }
 
 var (
-	uri          = flag.String("uri", "amqp://guest:guest@localhost:5672/", "AMQP URI")
-	exchange     = flag.String("exchange", "test-exchange", "Durable, non-auto-deleted AMQP exchange name")
-	exchangeType = flag.String("exchange-type", "direct", "Exchange type - direct|fanout|topic|x-custom")
-	q            = flag.String("queue", "test-queue", "Ephemeral AMQP queue name")
-	bindingKey   = flag.String("key", "test-key", "AMQP binding key")
+	uri      = flag.String("uri", "amqp://guest:guest@localhost:5672/", "AMQP URI")
+	exchange = flag.String(
+		"exchange",
+		"test-exchange",
+		"Durable, non-auto-deleted AMQP exchange name",
+	)
+	exchangeType = flag.String(
+		"exchange-type",
+		"direct",
+		"Exchange type - direct|fanout|topic|x-custom",
+	)
+	q          = flag.String("queue", "test-queue", "Ephemeral AMQP queue name")
+	bindingKey = flag.String("key", "test-key", "AMQP binding key")
 )
 
 func init() {
