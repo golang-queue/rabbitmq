@@ -59,7 +59,7 @@ func setupRabbitMQContainer(ctx context.Context, t *testing.T) (testcontainers.C
 }
 
 func TestShutdownWorkFlow(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	rabbitMQC, _ := setupRabbitMQContainer(ctx, t)
 	defer testcontainers.CleanupContainer(t, rabbitMQC)
 
