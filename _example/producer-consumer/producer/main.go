@@ -63,7 +63,7 @@ func main() {
 	)
 
 	// assign tasks in queue
-	for i := 0; i < taskN; i++ {
+	for i := range taskN {
 		if err := q.Queue(&job{
 			Message: fmt.Sprintf("%s: handle the job: %d", *bindingKey, i+1),
 		}); err != nil {
